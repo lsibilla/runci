@@ -1,0 +1,7 @@
+.vs/
+.vscode/
+build
+dist
+env
+runci.egg-info
+__pycache__

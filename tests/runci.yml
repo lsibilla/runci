@@ -1,0 +1,47 @@
+version: "3"
+
+x-variables:
+
+services:
+  app:
+  utest-js:
+  utest-dsl:
+  itest:
+  stest:
+  etest:
+    
+x-targets:
+  default:
+    dependencies:
+    - build
+    - utests
+    - itests
+    - etests
+    - stests
+      
+  build:
+    steps:
+    - name: Build step
+      docker-build:
+        tag: image:latest
+        args:
+        - var1: value
+  
+  utests:
+    dependencies: utest-a utest-b
+      
+  utest-a:
+    steps:
+    - &first
+      name: Gate step
+      compose-build:
+      
+    - name: Step 1
+      compose-run:
+    
+    - name: Step 2
+      compose-start:
+
+    - *first
+  
+  utest-b:

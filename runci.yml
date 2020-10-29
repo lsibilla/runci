@@ -1,0 +1,55 @@
+version: "2.7"
+
+x-variables: ## "x-" is facultative. Allows to be used directly by docker-compose
+
+services:
+  app:
+    build: .
+    image: lsibilla/runci:latest
+    
+  artifact:
+    platform: linux/amd64
+    build:
+      context: .
+      args:
+        OUTPUT: artifact
+    volumes:
+      - ./dist:/out
+      
+  artifact-win:
+    platform: windows/amd64
+    build:
+      context: .
+      args:
+        OUTPUT: artifact
+        EXTENSION: .exe
+    volumes:
+      - ./dist:C:\out
+    
+x-targets: ## "x-" is facultative. Allows to be used directly by docker-compose
+  default:
+    dependencies:
+    - build
+      
+  build:
+    steps:
+    - name: Build the image
+      compose-build:
+        services: app
+  
+  artifact:
+    dependencies:
+    - artifact-linux
+    - artifact-windows
+
+  artifact-linux:
+    steps:
+    - name: Build the image
+      compose-build:   
+        services: artifact
+  
+  artifact-windows:
+    steps:
+    - name: Build the image
+      compose-build:   
+        services: artifact-win
