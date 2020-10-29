@@ -10,10 +10,10 @@ COPY runci /src/runci/
 COPY main.py /src/main.py
 COPY setup.py /src/setup.py
 
-RUN pip install .
-
 COPY tests /src/tests/
 RUN python -m unittest
+
+RUN pip install .
 
 COPY runci.spec /src/runci.spec
 RUN pyinstaller runci.spec
