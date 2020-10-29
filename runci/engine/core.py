@@ -14,7 +14,7 @@ class RunCIEngineException(Exception):
 class UnknownTargetException(RunCIEngineException):
     pass
 
-class AmbiguougTargetException(RunCIEngineException):
+class AmbiguousTargetException(RunCIEngineException):
     pass
 
 class DependencyNode(namedtuple("dependency_node", "job dependencies")):
