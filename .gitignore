@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Visual Studio and Visual Studio Code
+.vs/
+.vscode/
+*.pyproj
+*.user
+*.sln
