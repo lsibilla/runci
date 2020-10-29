@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     
-    name: Build on ${{ matrix.os }}/${{ matrix.python-version }}
+    name: Build on ${{ matrix.os }} python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
