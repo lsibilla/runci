@@ -1,9 +1,12 @@
 import unittest
-from runci.dal.yaml import load_config
 import os
+
+from runci.dal.yaml import load_config
+
 
 script_path = os.path.dirname(__file__)
 sample_config_path = "%s%s%s" % (script_path, os.sep, "runci.yml")
+
 
 class test_config(unittest.TestCase):
     def test_target_list(self):
@@ -17,7 +20,7 @@ class test_config(unittest.TestCase):
 
         self.assertListEqual(dependencies_list, ['build', 'utests', 'itests', 'etests', 'stests'])
         self.assertListEqual(dependencies_string, ['utest-a', 'utest-b'])
-        
+
     def test_steps(self):
         config = load_config(sample_config_path)
         steps = [t.steps for t in config.targets if t.name == 'utest-a'][0]
@@ -33,6 +36,7 @@ class test_config(unittest.TestCase):
         steps_spec = [s.spec for s in steps]
 
         self.assertNotIn(None, steps_spec)
+
 
 if __name__ == '__main__':
     unittest.main()

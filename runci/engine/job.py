@@ -1,21 +1,14 @@
 import asyncio
 from enum import Enum
+from collections import namedtuple
+from datetime import datetime
 import sys
 import traceback
 
 from runci.entities import config
-from runci.entities.parameters import Parameters
-from runci.engine import runner
+from runci.engine.runner import ComposeBuildRunner
 
 
-class JobStepStatus(Enum):
-    "runci step status enum type"
-    CREATED = 'created'
-    STARTED = 'started'
-    SUCCEEDED = 'succeeded'
-    FAILED = 'failed'
-    CANCELED = 'canceled'
-    
 class JobStatus(Enum):
     "runci job status enum type"
     CREATED = 'created'
@@ -23,7 +16,29 @@ class JobStatus(Enum):
     SUCCEEDED = 'succeeded'
     FAILED = 'failed'
     CANCELED = 'canceled'
-    
+
+
+class JobOutput(namedtuple("JobOutput", "stream timestamp message")):
+    """Represent a RunCI runner output line to stdout or stderr"""
+    _valid_streams = [sys.stdout, sys.stderr]
+
+    def __new__(cls, stream, message):
+        timestamp = datetime.now()
+        return super(JobOutput, cls).__new__(cls, stream, timestamp, message)
+
+    def release(self):
+        message = self.message
+        if isinstance(message, bytes):
+            message = message.decode("utf-8")
+        message = message.rstrip()
+
+        if self.stream in self._valid_streams:
+            print(message, file=self.stream)
+        else:
+            print("Unknown stream: " + self.stream, sys.stderr)
+            print("Message: " + message, file=sys.stderr)
+
+
 class Job(object):
     """description of class"""
 
@@ -40,7 +55,7 @@ class Job(object):
 
     def _log_message(self, output_stream, message):
         if message != []:
-            self._messages.put_nowait(runner.RunnerOutput(output_stream, message))
+            self._messages.put_nowait(JobOutput(output_stream, message))
 
     async def _start(self):
         if self._status == JobStatus.CREATED:
@@ -49,10 +64,10 @@ class Job(object):
                 self._status = JobStatus.STARTED
 
                 for step in self._target.steps:
-                    if step.type=='compose-build':
-                        step_runner = runner.ComposeBuildRunner(self._messages, step.spec)
+                    if step.type == 'compose-build':
+                        step_runner = ComposeBuildRunner(self._log_message, step.spec)
                         await step_runner.run(self._project)
-                        if step_runner.status != JobStepStatus.SUCCEEDED:
+                        if step_runner.is_succeeded:
                             self._log_message(sys.stderr, 'Step %s failed.' % step.name)
                             self._status = JobStatus.FAILED
                             break
@@ -60,7 +75,7 @@ class Job(object):
                         self._log_message(sys.stderr, 'Unknown step type: %s' % step.type)
                         self._status = JobStatus.FAILED
                         break
-            except:
+            except Exception:
                 self._log_message(sys.stderr, traceback.format_exc())
                 self._status = JobStatus.FAILED
             else:
@@ -68,7 +83,7 @@ class Job(object):
 
     def wait(self):
         return asyncio.ensure_future(self._task)
-    
+
     def start(self):
         self._task = asyncio.create_task(self._start())
         return self._task
@@ -84,7 +99,7 @@ class Job(object):
     @property
     def status(self) -> JobStatus:
         return self._status
-        
+
     def has_new_messages(self):
         if self._messages:
             return not self._messages.empty()
@@ -93,4 +108,3 @@ class Job(object):
         if self._messages:
             while not self._messages.empty():
                 self._messages.get_nowait().release()
-

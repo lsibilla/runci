@@ -1,4 +1,4 @@
-from .base import RunnerBase, RunnerOutput
+from .base import RunnerBase
 from .compose_build_runner import ComposeBuildRunner
 
-__all__ = ["RunnerOutput", "RunnerBase", "ComposeBuildRunner"]
+__all__ = ["RunnerBase", "ComposeBuildRunner"]

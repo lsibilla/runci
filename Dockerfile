@@ -2,15 +2,18 @@ ARG OUTPUT=run
 
 FROM python:3.9 as builder
 
+RUN pip install flake8
+
 COPY requirements.txt /src/requirements.txt
 WORKDIR /src
 RUN pip install -r requirements.txt
 
-COPY runci /src/runci/
 COPY main.py /src/main.py
 COPY setup.py /src/setup.py
-
+COPY runci /src/runci/
 COPY tests /src/tests/
+
+RUN flake8 . --count  --max-complexity=10 --max-line-length=127 --show-source --statistics
 RUN python -m unittest
 
 RUN pip install .
