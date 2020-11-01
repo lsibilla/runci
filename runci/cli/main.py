@@ -8,8 +8,6 @@ import asyncio
 
 DEFAULT_CONFIG_FILE = "runci.yml"
 
-asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
 
 @click.command()
 @click.option('-f', '--file', 'file', type=click.File('r', lazy=True), default=DEFAULT_CONFIG_FILE)

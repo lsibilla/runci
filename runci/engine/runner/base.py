@@ -9,6 +9,10 @@ from typing import Callable
 from runci.entities.config import Project
 
 
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+
 class RunnerStatus(Enum):
     "runci step status enum type"
     CREATED = 'created'
