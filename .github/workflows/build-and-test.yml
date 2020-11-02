@@ -5,7 +5,7 @@ name: Build and test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/* ]
   pull_request:
     branches: [ main ]
 
@@ -28,14 +28,25 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8
-        pip install -r requirements.txt
+        pip install -r requirements.build.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --max-complexity=10 --max-line-length=127 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         # flake8 . --count --max-complexity=10 --max-line-length=127 --exit-zero --statistics
-    - name: Test with unittest
+    - name: Test with coverage
       run: |
-        python -m unittest
+        coverage run --source runci -m unittest
+        coverage report -m
+    - name: Produce artifacts
+      run: |
+        pip install .
+        pyinstaller -F --distpath out -n runci runci.spec
+
+    - name: Publish artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: runci-${{ matrix.os }}-python${{ matrix.python-version }}
+        path: out
+        if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn` 
