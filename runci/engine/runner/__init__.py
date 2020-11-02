@@ -1,4 +1,8 @@
-from .base import RunnerBase
+from .base import RunnerBase, RunnerStatus
 from .compose_build_runner import ComposeBuildRunner
 
-__all__ = ["RunnerBase", "ComposeBuildRunner"]
+selector = {
+    'compose-build': ComposeBuildRunner
+}
+
+__all__ = ["selector", "RunnerStatus", "RunnerBase", "ComposeBuildRunner"]

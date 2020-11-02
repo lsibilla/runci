@@ -3,10 +3,9 @@ from enum import Enum
 from collections import namedtuple
 from datetime import datetime
 import sys
-import traceback
 
 from runci.entities import config
-from runci.engine.runner import ComposeBuildRunner
+from runci.engine import runner
 
 
 class JobStatus(Enum):
@@ -35,7 +34,7 @@ class JobOutput(namedtuple("JobOutput", "stream timestamp message")):
         if self.stream in self._valid_streams:
             print(message, file=self.stream)
         else:
-            print("Unknown stream: " + self.stream, sys.stderr)
+            print("Unknown stream: " + self.stream, file=sys.stderr)
             print("Message: " + message, file=sys.stderr)
 
 
@@ -59,30 +58,25 @@ class Job(object):
 
     async def _start(self):
         if self._status == JobStatus.CREATED:
+            self._status = JobStatus.STARTED
             self._messages = asyncio.Queue()
-            try:
-                self._status = JobStatus.STARTED
 
-                for step in self._target.steps:
-                    if step.type == 'compose-build':
-                        step_runner = ComposeBuildRunner(self._log_message, step.spec)
-                        await step_runner.run(self._project)
-                        if step_runner.is_succeeded:
-                            self._log_message(sys.stderr, 'Step %s failed.' % step.name)
-                            self._status = JobStatus.FAILED
-                            break
-                    else:
-                        self._log_message(sys.stderr, 'Unknown step type: %s' % step.type)
+            for step in self._target.steps:
+                step_runner_cls = runner.selector.get(step.type, None)
+                if step_runner_cls is not None:
+                    step_runner = step_runner_cls(self._log_message, step.spec)
+                    await step_runner.run(self._project)
+                    if not step_runner.is_succeeded:
+                        self._log_message(sys.stderr, 'Step %s failed.' % step.name)
                         self._status = JobStatus.FAILED
                         break
-            except Exception:
-                self._log_message(sys.stderr, traceback.format_exc())
-                self._status = JobStatus.FAILED
-            else:
-                self._status = JobStatus.SUCCEEDED
+                else:
+                    self._log_message(sys.stderr, 'Unknown step type: %s' % step.type)
+                    self._status = JobStatus.FAILED
+                    break
 
-    def wait(self):
-        return asyncio.ensure_future(self._task)
+            if self._status == JobStatus.STARTED:
+                self._status = JobStatus.SUCCEEDED
 
     def start(self):
         self._task = asyncio.create_task(self._start())
@@ -92,7 +86,9 @@ class Job(object):
         return asyncio.run(self._start())
 
     def cancel(self):
-        if self._status == JobStatus.CREATED or self._status == JobStatus.STARTED:
+        if self._status == JobStatus.CREATED:
+            self._status = JobStatus.CANCELED
+        elif self._status == JobStatus.STARTED:
             self._task.cancel()
             self._status = JobStatus.CANCELED
 

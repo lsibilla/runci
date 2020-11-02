@@ -1,10 +1,13 @@
+import asyncio
 import click
 import logging
+import os
+import sys
+
 from runci.dal.yaml import load_config
 from runci.entities.parameters import Parameters
 from runci.engine import core
 from runci.engine.job import JobStatus
-import asyncio
 
 DEFAULT_CONFIG_FILE = "runci.yml"
 
@@ -13,16 +16,35 @@ DEFAULT_CONFIG_FILE = "runci.yml"
 @click.option('-f', '--file', 'file', type=click.File('r', lazy=True), default=DEFAULT_CONFIG_FILE)
 @click.argument('targets', nargs=-1)
 def main(targets, file):
-    parameters = Parameters(file.name, targets, 1)
+    if hasattr(file, 'name') \
+       and isinstance(file.name, str) \
+       and os.path.isfile(file.name):
+        # If filename available and file exists, load file to allow docker-compose integration
+        parameters = Parameters(file.name, targets, 1)
+    else:
+        parameters = Parameters(file, targets, 1)
     project = load_config(parameters)
 
     logging.debug("Building the following targets: %s" % str.join(" ", targets))
     unknown_targets = [t for t in targets if t not in [t.name for t in project.targets]]
     if any(unknown_targets):
-        logging.error("Unkown targets: %s" % str.join(" ", unknown_targets))
-        return 1
+        print("Unkown targets: %s" % str.join(" ", unknown_targets), file=sys.stderr)
+        exit(1)
 
-    asyncio.run(run_project(project))
+    result = asyncio.run(run_project(project))
+
+    if result == JobStatus.SUCCEEDED:
+        print("Pipeline has run succesfully.")
+        exit(0)
+    elif result == JobStatus.FAILED:
+        print("Pipeline has failed.", file=sys.stderr)
+        exit(1)
+    elif result == JobStatus.CANCELED:
+        print("Pipeline has been canceled.", file=sys.stderr)
+        exit(2)
+    else:
+        print("Pipeline has been run but outcome is undetermined. Please report this as a bug.", file=sys.stderr)
+        exit(3)
 
 
 async def run_project(project):
@@ -42,4 +64,5 @@ async def run_project(project):
         else:
             await asyncio.sleep(0.1)
 
-    return await task
+    await task
+    return tree.status

@@ -52,7 +52,8 @@ def load_config(parameters):
     data = safe_load(datastream)
     datastream.close()
 
-    services = config.create_entities(__create_service, data['services'].items())
+    services_data = data.get('services', {})
+    services = config.create_entities(__create_service, services_data.items())
 
     if "targets" in data:
         targets = data['targets']

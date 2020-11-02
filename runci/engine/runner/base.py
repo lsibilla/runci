@@ -24,12 +24,12 @@ class RunnerStatus(Enum):
 
 class RunnerBase():
     spec: dict
-    status: RunnerStatus
+    _status: RunnerStatus
     _message_logger: asyncio.Queue
 
     def __init__(self, message_logger: Callable, spec: dict):
         self.spec = spec
-        self.status = RunnerStatus.CREATED
+        self._status = RunnerStatus.CREATED
         self._message_logger = message_logger
 
     def _log_message(self, output_stream, message):
@@ -47,31 +47,32 @@ class RunnerBase():
         pass
 
     async def run(self, project: Project):
-        self.status = RunnerStatus.STARTED
+        self._status = RunnerStatus.STARTED
         self._log_message(sys.stdout, "Starting %s runner\n" % type(self).__name__)
         try:
             await self.run_internal(project)
         except Exception:
-            self._log_message(sys.stderr, "Runner %s failed:" % type(self))
+            self._log_message(sys.stderr, "Runner %s failed:" % type(self).__name__)
             self._log_message(sys.stderr, traceback.format_exc())
-            self.status = RunnerStatus.FAILED
+            self._status = RunnerStatus.FAILED
 
-        if self.status == RunnerStatus.STARTED:
-            self.status = RunnerStatus.SUCCEEDED
+        if self._status == RunnerStatus.STARTED:
+            self._status = RunnerStatus.SUCCEEDED
 
     async def _run_process(self, args):
         self._log_message(sys.stdout, "Running command: %s\n" % str.join(" ", args))
         process = await asyncio.create_subprocess_exec(args[0], *args[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        await asyncio.wait([self._log_stream(sys.stdout, process.stdout),
-                            self._log_stream(sys.stderr, process.stderr),
-                            process.wait()])
+        await asyncio.wait([asyncio.create_task(coro)
+                            for coro in [self._log_stream(sys.stdout, process.stdout),
+                                         self._log_stream(sys.stderr, process.stderr),
+                                         process.wait()]])
 
         if process.returncode == 0:
-            self.status = RunnerStatus.SUCCEEDED
+            self._status = RunnerStatus.SUCCEEDED
         else:
-            self.status = RunnerStatus.FAILED
+            self._status = RunnerStatus.FAILED
 
     @property
     def is_succeeded(self):
-        return self.status == RunnerStatus.SUCCEEDED
+        return self._status == RunnerStatus.SUCCEEDED

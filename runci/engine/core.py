@@ -2,7 +2,7 @@ import asyncio
 from collections import namedtuple
 
 from runci.entities import config
-from runci.engine.job import Job
+from runci.engine.job import Job, JobStatus
 
 
 class RunCIEngineException(Exception):
@@ -21,25 +21,26 @@ class DependencyNode(namedtuple("dependency_node", "job dependencies")):
     "runci depencency tree node"
     async def _run_dependencies(self, noparallel):
         if noparallel:
-            ret = [job
-                   for node in self.dependencies
-                   for job in await node._run(noparallel)]
+            jobs = [job
+                    for node in self.dependencies
+                    for job in await node.start(noparallel)]
         else:
-            tasks = [node._run(noparallel) for node in self.dependencies]
+            tasks = [node.start(noparallel) for node in self.dependencies]
             jobs = [job
                     for task in tasks
                     for job in await task]
-            return jobs
 
-        return ret
+        return jobs
 
     async def _run(self, noparallel=False):
-        ret = [job for job in list(await self._run_dependencies(noparallel))]
-        if self.job is not None:
-            ret.append(self.job)
+        jobs = list(await self._run_dependencies(noparallel))
+        if any([job for job in jobs if job.status in [JobStatus.FAILED, JobStatus.CANCELED]]):
+            self.job.cancel()
+        else:
+            jobs.append(self.job)
             await self.job.start()
 
-        return ret
+        return jobs
 
     def start(self, noparallel=False):
         return asyncio.create_task(self._run(noparallel))
@@ -47,9 +48,9 @@ class DependencyNode(namedtuple("dependency_node", "job dependencies")):
     def run(self, noparallel=False):
         return asyncio.run(self._run(noparallel))
 
-    def wait(self):
-        if self.job is not None:
-            return self.job.wait()
+    @property
+    def status(self):
+        return self.job.status
 
 
 class DependencyTree():
@@ -115,3 +116,7 @@ class DependencyTree():
 
     def run(self, noparallel=False):
         return self._root_node.run(noparallel)
+
+    @property
+    def status(self):
+        return self.root_node.status
