@@ -2,11 +2,10 @@ ARG OUTPUT=run
 
 FROM python:3.9 as builder
 
-RUN pip install flake8 coverage
-
-COPY requirements.txt /src/requirements.txt
+COPY requirements.txt /src/
+COPY requirements.build.txt /src/
 WORKDIR /src
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.build.txt
 
 COPY main.py /src/main.py
 COPY setup.py /src/setup.py
