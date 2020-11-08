@@ -13,7 +13,6 @@ COPY runci /src/runci/
 COPY tests /src/tests/
 
 RUN flake8 . --count  --max-complexity=10 --max-line-length=127 --show-source --statistics
-RUN python -m unittest
 RUN coverage run --source ./runci --timid -m unittest && coverage report -m
 
 RUN pip install .
