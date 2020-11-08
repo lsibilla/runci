@@ -1,25 +1,16 @@
 import asyncio
 from abc import abstractmethod
-from enum import Enum
 import subprocess
 import sys
 import traceback
 from typing import Callable
 
 from runci.entities.config import Project
+from . import RunnerStatus
 
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
-
-class RunnerStatus(Enum):
-    "runci step status enum type"
-    CREATED = 'created'
-    STARTED = 'started'
-    SUCCEEDED = 'succeeded'
-    FAILED = 'failed'
-    CANCELED = 'canceled'
 
 
 class RunnerBase():

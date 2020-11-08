@@ -1,3 +1,4 @@
+from runci.engine import runner
 from .base import RunnerBase
 from runci.entities.config import Project
 
@@ -16,3 +17,6 @@ class ComposeBuildRunner(RunnerBase):
             args.extend(service_list.split(' '))
 
         await self._run_process(args)
+
+
+runner.register_runner('compose-build', ComposeBuildRunner)

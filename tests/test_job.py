@@ -3,6 +3,7 @@ import sys
 import unittest
 from unittest.mock import patch, call
 
+from runci.engine.runner.base import RunnerBase
 from runci.engine import runner
 from runci.engine.job import Job, JobStatus
 from runci.entities.config import Project, Target, Step
@@ -24,11 +25,11 @@ class test_job(unittest.TestCase):
 
     @patch("runci.engine.job.Job._log_message")
     def test_exception(self, mock):
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 raise Exception("Simulating an exception")
 
-        runner.selector["mock"] = TestRunner
+        runner.register_runner("mock", TestRunner)
         target = Target("test", "", [Step("test", "mock", {})])
         job = Job(None, target)
         job.run()
@@ -48,7 +49,7 @@ class test_job(unittest.TestCase):
     def test_release_messages(self, mock, mock_stdout, mock_stderr):
         command = self.test_command
 
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 

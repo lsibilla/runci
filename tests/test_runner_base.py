@@ -3,7 +3,7 @@ import sys
 import unittest
 
 from runci.entities.config import Project
-from runci.engine import runner
+from runci.engine.runner.base import RunnerBase
 
 
 class test_runner_base(unittest.TestCase):
@@ -13,7 +13,7 @@ class test_runner_base(unittest.TestCase):
                   "echo stderr3 1>&2 && echo stdout3;"
 
     def test_catch_exception(self):
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 raise Exception("Simulating failed runner")
 
@@ -30,7 +30,7 @@ class test_runner_base(unittest.TestCase):
             if message != []:
                 messages.append([output_stream, message])
 
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 
@@ -47,7 +47,7 @@ class test_runner_base(unittest.TestCase):
             if message != []:
                 messages.append([output_stream, message])
 
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 
@@ -66,7 +66,7 @@ class test_runner_base(unittest.TestCase):
             if message != []:
                 messages.append([output_stream, message])
 
-        class TestRunner(runner.RunnerBase):
+        class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 

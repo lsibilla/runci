@@ -88,7 +88,7 @@ class test_target(unittest.TestCase):
             core.DependencyTree(project).run()
 
 
-@patch("runci.engine.runner.RunnerBase.run")
+@patch("runci.engine.runner.base.RunnerBase.run")
 class test_run(unittest.TestCase):
     @parameterized.expand(allparams)
     def test_runner_run(self, mock, project, calls):
@@ -96,15 +96,16 @@ class test_run(unittest.TestCase):
         mock.assert_has_calls([call(project)])
 
 
-@patch("runci.engine.runner.RunnerBase._run_process")
+@patch("runci.engine.runner.base.RunnerBase._run_process")
 class test_run_process(unittest.TestCase):
     @parameterized.expand(allparams_paralellization)
     def test_command_line_args(self, mock, project, calls, noparallel):
+        runner.import_runners()
         core.DependencyTree(project).run(noparallel)
         mock.assert_has_calls(calls)
 
 
-@patch("runci.engine.runner.RunnerBase.run", autospec=True)
+@patch("runci.engine.runner.base.RunnerBase.run", autospec=True)
 class test_build_result(unittest.TestCase):
     @parameterized.expand(allparams_paralellization)
     def test_sucessful_build(self, mock, project, calls, noparallel):

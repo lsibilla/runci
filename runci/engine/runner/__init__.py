@@ -1,8 +1,24 @@
-from .base import RunnerBase, RunnerStatus
-from .compose_build_runner import ComposeBuildRunner
+import enum
 
-selector = {
-    'compose-build': ComposeBuildRunner
-}
 
-__all__ = ["selector", "RunnerStatus", "RunnerBase", "ComposeBuildRunner"]
+class RunnerStatus(enum.Enum):
+    "runci step status enum type"
+    CREATED = 'created'
+    STARTED = 'started'
+    SUCCEEDED = 'succeeded'
+    FAILED = 'failed'
+    CANCELED = 'canceled'
+
+
+def register_runner(name, cls):
+    selector[name] = cls
+
+
+def import_runners():
+    import pkgutil
+    import importlib
+    for finder, name, ispkg in pkgutil.iter_modules(["runci/engine/runner"], "runci.engine.runner."):
+        importlib.import_module(name)
+
+
+selector = {}
