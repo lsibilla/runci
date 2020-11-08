@@ -134,3 +134,8 @@ dmypy.json
 *.pyproj
 *.user
 *.sln
+
+bin/
+out/
+pyvenv.cfg
+lib64
