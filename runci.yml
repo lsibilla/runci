@@ -34,9 +34,14 @@ x-targets: ## "x-" is facultative. Allows to be used directly by docker-compose
   build:
     steps:
     - name: Build the image
+      docker-build:
+        
+  compose-build:
+    steps:
+    - name: Build the image
       compose-build:
         services: app
-  
+        
   artifact:
     dependencies:
     - artifact-linux
