@@ -59,7 +59,7 @@ async def run_project(project):
         working_nodes = [node for node in tree.get_nodes() if node.job.has_new_messages()]
         if any(working_nodes):
             for node in working_nodes:
-                while node.job.status == JobStatus.STARTED:
+                while node.job.has_new_messages() or node.job.status == JobStatus.STARTED:
                     node.job.release_new_messages()
                     await asyncio.sleep(0.1)
         else:
