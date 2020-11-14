@@ -1,6 +1,5 @@
 import asyncio
 import click
-import logging
 import os
 import sys
 
@@ -28,7 +27,7 @@ def main(targets, file):
         parameters = Parameters(file, targets, 1)
     project = load_config(parameters)
 
-    logging.debug("Building the following targets: %s" % str.join(" ", targets))
+    print("Running RunCI pipeline for the following target(s): %s" % str.join(" ", targets))
     unknown_targets = [t for t in targets if t not in [t.name for t in project.targets]]
     if any(unknown_targets):
         print("Unkown targets: %s" % str.join(" ", unknown_targets), file=sys.stderr)
