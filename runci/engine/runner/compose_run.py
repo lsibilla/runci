@@ -12,10 +12,11 @@ class ComposeRunRunner(RunnerBase):
         args = ['docker-compose']
         for file in files:
             args.extend(['-f', file])
-        args.extend(['run', '--rm'])
 
         if project_name is not None:
             args.extend(['-p', project_name])
+
+        args.extend(['run', '--rm'])
 
         if service_list is not None:
             args.extend(service_list.split(' '))
