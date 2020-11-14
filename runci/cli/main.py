@@ -16,6 +16,9 @@ DEFAULT_CONFIG_FILE = "runci.yml"
 @click.option('-f', '--file', 'file', type=click.File('r', lazy=True), default=DEFAULT_CONFIG_FILE)
 @click.argument('targets', nargs=-1)
 def main(targets, file):
+    if len(targets) == 0:
+        targets = ["default"]
+
     if hasattr(file, 'name') \
        and isinstance(file.name, str) \
        and os.path.isfile(file.name):
