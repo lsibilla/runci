@@ -7,14 +7,15 @@ class DockerBuildRunner(RunnerBase):
     async def run_internal(self, project: Project):
         dockerfile = self.spec.get('dockerfile', None)
         context = self.spec.get('context', '.')
-        tags = self.spec.get('tags', None).split(' ')
+        tags = self.spec.get('tags', None)
 
         args = ['docker', 'build']
         if dockerfile is not None:
             args.extend(['-f', dockerfile])
 
-        for tag in tags:
-            args.extend(['-t', tag])
+        if tags is not None:
+            for tag in tags.split(' '):
+                args.extend(['-t', tag])
 
         args.append(context)
 
