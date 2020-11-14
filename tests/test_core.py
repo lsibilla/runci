@@ -125,10 +125,7 @@ class test_build_result(unittest.TestCase):
 
         tree = core.DependencyTree(project)
         tree.run(noparallel)
-        if tree.root_node.dependencies:
-            self.assertEqual(tree.status, job.JobStatus.CANCELED)
-        else:
-            self.assertEqual(tree.status, job.JobStatus.FAILED)
+        self.assertEqual(tree.status, job.JobStatus.FAILED)
 
 
 if __name__ == '__main__':

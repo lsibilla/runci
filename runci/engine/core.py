@@ -35,7 +35,7 @@ class DependencyNode(namedtuple("dependency_node", "job dependencies")):
     async def _run(self, noparallel=False):
         jobs = list(await self._run_dependencies(noparallel))
         if any([job for job in jobs if job.status in [JobStatus.FAILED, JobStatus.CANCELED]]):
-            self.job.cancel()
+            self.job.fail()
         else:
             jobs.append(self.job)
             await self.job.start()

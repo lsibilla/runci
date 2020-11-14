@@ -58,13 +58,13 @@ async def run_project(project):
     while is_running:
         is_running = not task.done()
 
-        working_nodes = [node for node in tree.get_nodes() if node.job.has_new_messages()]
+        working_nodes = [node for node in tree.get_nodes() if node.job.has_new_events()]
         if any(working_nodes):
             for node in working_nodes:
-                while node.job.has_new_messages() or node.job.status == JobStatus.STARTED:
-                    node.job.release_new_messages()
-                    await asyncio.sleep(0.1)
+                while node.job.has_new_events() or node.job.status == JobStatus.STARTED:
+                    await node.job.release_all_events()
         else:
+            # Looks like no job has been started yet. Wait a moment.
             await asyncio.sleep(0.1)
 
     await task

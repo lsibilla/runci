@@ -5,7 +5,7 @@ from unittest.mock import patch, call
 
 from runci.engine.runner.base import RunnerBase
 from runci.engine import runner
-from runci.engine.job import Job, JobStatus
+from runci.engine.job import Job, JobStatus, JobStepUnknownTypeEvent
 from runci.entities.config import Project, Target, Step
 
 
@@ -15,15 +15,16 @@ class test_job(unittest.TestCase):
                   "echo stdout2 && echo stderr2 1>&2; " + \
                   "echo stderr3 1>&2 && echo stdout3;"
 
-    @patch("runci.engine.job.Job._log_message")
+    @patch("runci.engine.job.Job._log_event")
     def test_invalid_step_type(self, mock):
         target = Target("test", "", [Step("test", "invalid", {})])
         job = Job(None, target)
         job.run()
         self.assertEqual(job.status, JobStatus.FAILED)
-        mock.assert_called_once_with(sys.stderr, 'Unknown step type: invalid')
+        self.assertTrue(any([call for call in mock.mock_calls
+                             if isinstance(call.args[0], JobStepUnknownTypeEvent)]))
 
-    @patch("runci.engine.job.Job._log_message")
+    @patch("runci.engine.job.Job._log_message_event")
     def test_exception(self, mock):
         class TestRunner(RunnerBase):
             async def run_internal(self, project: Project):
@@ -56,17 +57,19 @@ class test_job(unittest.TestCase):
         async def job_start(self):
             self._messages = asyncio.Queue()
             self._status = JobStatus.STARTED
-            self.runner = TestRunner(self._log_message, dict())
+            self.runner = TestRunner(self._log_message_event, dict())
             await self.runner.run(self._project)
 
         mock.side_effect = job_start
+        mock_stdout.encoding = 'utf-8'
+        mock_stderr.encoding = 'utf-8'
         job = Job(None, None)
         job.run()
         self.assertTrue(job.runner.is_succeeded)
 
-        self.assertTrue(job.has_new_messages())
-        job.release_new_messages()
-        self.assertFalse(job.has_new_messages())
+        self.assertTrue(job.has_new_events())
+        job.release_new_events()
+        self.assertFalse(job.has_new_events())
 
 
 if __name__ == '__main__':
