@@ -1,5 +1,6 @@
-import asyncio
 from abc import abstractmethod
+import asyncio
+import os
 import subprocess
 import sys
 import traceback
@@ -23,6 +24,9 @@ class RunnerBase():
         self._status = RunnerStatus.CREATED
         self._message_logger = message_logger
 
+    def _log_runner_message(self, output_stream, message):
+        self._log_message(output_stream, message + os.sep)
+
     def _log_message(self, output_stream, message):
         if message != []:
             self._message_logger(output_stream, message)
@@ -39,19 +43,19 @@ class RunnerBase():
 
     async def run(self, project: Project):
         self._status = RunnerStatus.STARTED
-        self._log_message(sys.stdout, "Starting %s runner\n" % type(self).__name__)
+        self._log_runner_message(sys.stdout, "Starting %s runner" % type(self).__name__)
         try:
             await self.run_internal(project)
         except Exception:
-            self._log_message(sys.stderr, "Runner %s failed:" % type(self).__name__)
-            self._log_message(sys.stderr, traceback.format_exc())
+            self._log_runner_message(sys.stderr, "Runner %s failed:" % type(self).__name__)
+            self._log_runner_message(sys.stderr, traceback.format_exc())
             self._status = RunnerStatus.FAILED
 
         if self._status == RunnerStatus.STARTED:
             self._status = RunnerStatus.SUCCEEDED
 
     async def _run_process(self, args):
-        self._log_message(sys.stdout, "Running command: %s\n" % str.join(" ", args))
+        self._log_runner_message(sys.stdout, "Running command: %s" % str.join(" ", args))
         process = await asyncio.create_subprocess_exec(args[0], *args[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         await asyncio.wait([asyncio.create_task(coro)

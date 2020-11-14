@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 import unittest
 from unittest.mock import patch, call
@@ -36,13 +37,13 @@ class test_job(unittest.TestCase):
         job.run()
         self.assertEqual(job.status, JobStatus.FAILED)
 
-        mock.assert_has_calls([call(sys.stdout, 'Starting TestRunner runner\n'),
-                               call(sys.stderr, 'Runner TestRunner failed:')])
+        mock.assert_has_calls([call(sys.stdout, 'Starting TestRunner runner' + os.sep),
+                               call(sys.stderr, 'Runner TestRunner failed:' + os.sep)])
         stacktrace_call = mock.mock_calls[2]
         stream, message = stacktrace_call.args
         self.assertEqual(stream, sys.stderr)
         self.assertRegex(message, "^Traceback ")
-        self.assertRegex(message, "Exception: Simulating an exception$")
+        self.assertRegex(message, 'Exception: Simulating an exception')
 
     @patch("sys.stderr")
     @patch("sys.stdout")

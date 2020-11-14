@@ -36,10 +36,9 @@ class JobMessage(namedtuple("JobMessage", "stream timestamp message")):
         message = self.message
         if isinstance(message, bytes):
             message = message.decode(self.stream.encoding)
-        message = message.rstrip()
 
         if self.stream in self._valid_streams:
-            print(message, file=self.stream)
+            self.stream.write(message)
         else:
             print("Unknown stream: " + self.stream, file=sys.stderr)
             print("Message: " + message, file=sys.stderr)
