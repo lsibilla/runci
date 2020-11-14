@@ -7,7 +7,7 @@ from runci.engine.runner.docker_build import DockerBuildRunner
 from unittest.mock import patch
 
 
-class test_runner_compose_build(unittest.TestCase):
+class test_runner_docker_build(unittest.TestCase):
     step = Step("test", "docker-build", {
         "dockerfile": "Dockerfile",
         "tags": "runci/tag:latest runci/tag:v1.0"
