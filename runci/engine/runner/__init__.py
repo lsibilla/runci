@@ -17,7 +17,7 @@ def register_runner(name, cls):
 def import_runners():
     import pkgutil
     import importlib
-    for finder, name, ispkg in pkgutil.iter_modules(["runci/engine/runner"], "runci.engine.runner."):
+    for finder, name, ispkg in pkgutil.iter_modules(__path__, "runci.engine.runner."):
         importlib.import_module(name)
 
 
