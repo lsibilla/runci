@@ -3,7 +3,7 @@ import click
 import os
 import sys
 
-from runci.dal.yaml import load_config
+from runci.dal.yaml import load_project
 from runci.entities.parameters import Parameters
 from runci.engine import core, runner
 from runci.engine.job import JobStatus
@@ -25,7 +25,7 @@ def main(targets, file):
         parameters = Parameters(file.name, targets, 1)
     else:
         parameters = Parameters(file, targets, 1)
-    project = load_config(parameters)
+    project = load_project(parameters)
 
     print("Running RunCI pipeline for the following target(s): %s" % str.join(" ", targets))
     unknown_targets = [t for t in targets if t not in [t.name for t in project.targets]]

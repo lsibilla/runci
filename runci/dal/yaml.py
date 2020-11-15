@@ -38,7 +38,7 @@ def __create_step(item):
     return config.Step(name, type, spec)
 
 
-def load_config(parameters):
+def load_project(parameters):
     if isinstance(parameters, Parameters):
         file = parameters.dataconnection
     else:
