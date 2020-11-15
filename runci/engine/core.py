@@ -1,9 +1,13 @@
 import asyncio
 from collections import namedtuple
+import importlib
+import inspect
+import sys
 
 from runci.entities.config import Target
 from runci.entities.context import Context
 from runci.engine.job import Job, JobStatus
+from runci.engine.runner.base import RunnerBase
 
 
 class RunCIEngineException(Exception):
@@ -128,8 +132,16 @@ class DependencyTree():
         return self.root_node.status
 
 
-def create_context(project, parameters):
+def create_context(project, parameters, modules=["compose_build", "compose_run", "docker_build"]):
+    runners = {}
+    for module in modules:
+        module_fullname = "runci.engine.runner." + module
+        importlib.import_module(module_fullname)
+        for name, obj in inspect.getmembers(sys.modules[module_fullname], inspect.isclass):
+            if issubclass(obj, RunnerBase):
+                runners[obj.get_selector()] = obj
+
     tree = DependencyTree()
-    context = Context(project, parameters, tree)
+    context = Context(project, parameters, runners, tree)
     tree.set_context(context)
     return context

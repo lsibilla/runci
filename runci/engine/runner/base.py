@@ -18,11 +18,16 @@ class RunnerBase():
     spec: dict
     _status: RunnerStatus
     _message_logger: Callable
+    _selector = None
 
     def __init__(self, message_logger: Callable, spec: dict):
         self.spec = spec
         self._status = RunnerStatus.CREATED
         self._message_logger = message_logger
+
+    @classmethod
+    def get_selector(cls):
+        return cls._selector
 
     def _log_runner_message(self, output_stream, message):
         self._log_message(output_stream, message + os.sep)

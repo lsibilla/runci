@@ -5,7 +5,7 @@ import sys
 
 from runci.dal.yaml import load_project
 from runci.entities.parameters import Parameters
-from runci.engine import core, runner
+from runci.engine import core
 from runci.engine.job import JobStatus
 
 DEFAULT_CONFIG_FILE = "runci.yml"
@@ -34,7 +34,6 @@ def main(targets, file):
         print("Unkown targets: %s" % str.join(" ", unknown_targets), file=sys.stderr)
         exit(1)
 
-    runner.import_runners()
     result = asyncio.run(run_project(context))
 
     if result == JobStatus.SUCCEEDED:

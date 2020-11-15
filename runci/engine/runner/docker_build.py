@@ -1,9 +1,10 @@
-from runci.engine import runner
 from .base import RunnerBase
 from runci.entities.context import Context
 
 
 class DockerBuildRunner(RunnerBase):
+    _selector = 'docker-build'
+
     async def run_internal(self, context: Context):
         dockerfile = self.spec.get('dockerfile', None)
         context = self.spec.get('context', '.')
@@ -20,6 +21,3 @@ class DockerBuildRunner(RunnerBase):
         args.append(context)
 
         await self._run_process(args)
-
-
-runner.register_runner('docker-build', DockerBuildRunner)

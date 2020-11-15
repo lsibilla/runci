@@ -7,7 +7,6 @@ import sys
 
 from runci.entities.context import Context
 from runci.entities.config import Target
-from runci.engine import runner
 
 
 class JobStatus(Enum):
@@ -141,7 +140,7 @@ class Job(object):
             self._log_event(JobStartEvent())
 
             for step in self._target.steps:
-                step_runner_cls = runner.selector.get(step.type, None)
+                step_runner_cls = self._context.runners.get(step.type, None)
                 if step_runner_cls is not None:
                     step_runner = step_runner_cls(self._log_message_event, step.spec)
                     await step_runner.run(self._context)

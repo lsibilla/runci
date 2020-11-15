@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import patch, call
 
 from runci.engine.runner.base import RunnerBase
-from runci.engine import runner
 from runci.engine.job import Job, JobStatus, JobStepUnknownTypeEvent
+from runci.entities.context import Context
 from runci.entities.config import Project, Target, Step
 
 
@@ -19,7 +19,8 @@ class test_job(unittest.TestCase):
     @patch("runci.engine.job.Job._log_event")
     def test_invalid_step_type(self, mock):
         target = Target("test", "", [Step("test", "invalid", {})])
-        job = Job(None, target)
+        context = Context(None, None, {}, None)
+        job = Job(context, target)
         job.run()
         self.assertEqual(job.status, JobStatus.FAILED)
         self.assertTrue(any([call for call in mock.mock_calls
@@ -31,9 +32,9 @@ class test_job(unittest.TestCase):
             async def run_internal(self, project: Project):
                 raise Exception("Simulating an exception")
 
-        runner.register_runner("mock", TestRunner)
         target = Target("test", "", [Step("test", "mock", {})])
-        job = Job(None, target)
+        context = Context(None, None, {"mock": TestRunner}, None)
+        job = Job(context, target)
         job.run()
         self.assertEqual(job.status, JobStatus.FAILED)
 
