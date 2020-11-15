@@ -15,10 +15,11 @@ test_project = Project(services=[],
                                 Target(name="wrong_step_type",
                                        dependencies=[],
                                        steps=[Step("wrong_step", "wrong_type", {})])
-                                ],
-                       parameters=Parameters(dataconnection="runci.yml",
-                                             targets=["target"],
-                                             verbosity=0)),
+                                ])
+
+test_parameters = Parameters(dataconnection="runci.yml",
+                             targets=["target"],
+                             verbosity=0)
 test_project_yaml = """
 version: "2.4"
 targets:

@@ -26,6 +26,7 @@ def main(targets, file):
     else:
         parameters = Parameters(file, targets, 1)
     project = load_project(parameters)
+    context = core.create_context(project, parameters)
 
     print("Running RunCI pipeline for the following target(s): %s" % str.join(" ", targets))
     unknown_targets = [t for t in targets if t not in [t.name for t in project.targets]]
@@ -34,7 +35,7 @@ def main(targets, file):
         exit(1)
 
     runner.import_runners()
-    result = asyncio.run(run_project(project))
+    result = asyncio.run(run_project(context))
 
     if result == JobStatus.SUCCEEDED:
         print("Pipeline has run succesfully.")
@@ -50,8 +51,8 @@ def main(targets, file):
         exit(3)
 
 
-async def run_project(project):
-    tree = core.DependencyTree(project)
+async def run_project(context):
+    tree = context.dependencyTree
     task = tree.start()
 
     is_running = True

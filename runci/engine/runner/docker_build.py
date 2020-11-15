@@ -1,10 +1,10 @@
 from runci.engine import runner
 from .base import RunnerBase
-from runci.entities.config import Project
+from runci.entities.context import Context
 
 
 class DockerBuildRunner(RunnerBase):
-    async def run_internal(self, project: Project):
+    async def run_internal(self, context: Context):
         dockerfile = self.spec.get('dockerfile', None)
         context = self.spec.get('context', '.')
         tags = self.spec.get('tags', None)

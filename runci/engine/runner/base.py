@@ -6,7 +6,7 @@ import sys
 import traceback
 from typing import Callable
 
-from runci.entities.config import Project
+from runci.entities.context import Context
 from . import RunnerStatus
 
 
@@ -17,7 +17,7 @@ if sys.platform == "win32":
 class RunnerBase():
     spec: dict
     _status: RunnerStatus
-    _message_logger: asyncio.Queue
+    _message_logger: Callable
 
     def __init__(self, message_logger: Callable, spec: dict):
         self.spec = spec
@@ -38,14 +38,14 @@ class RunnerBase():
             self._log_message(output_stream, await input_stream.readline())
 
     @abstractmethod
-    async def run_internal(self, project: Project):
+    async def run_internal(self, context: Context):
         pass
 
-    async def run(self, project: Project):
+    async def run(self, context: Context):
         self._status = RunnerStatus.STARTED
         self._log_runner_message(sys.stdout, "Starting %s runner" % type(self).__name__)
         try:
-            await self.run_internal(project)
+            await self.run_internal(context)
         except Exception:
             self._log_runner_message(sys.stderr, "Runner %s failed:" % type(self).__name__)
             self._log_runner_message(sys.stderr, traceback.format_exc())

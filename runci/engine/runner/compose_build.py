@@ -1,11 +1,11 @@
 from runci.engine import runner
 from .base import RunnerBase
-from runci.entities.config import Project
+from runci.entities.context import Context
 
 
 class ComposeBuildRunner(RunnerBase):
-    async def run_internal(self, project: Project):
-        files = self.spec.get('file', project.parameters.dataconnection).split(' ')
+    async def run_internal(self, context: Context):
+        files = self.spec.get('file', context.parameters.dataconnection).split(' ')
         service_list = self.spec.get('services', None)
 
         args = ['docker-compose']

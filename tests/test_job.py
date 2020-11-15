@@ -59,7 +59,7 @@ class test_job(unittest.TestCase):
             self._messages = asyncio.Queue()
             self._status = JobStatus.STARTED
             self.runner = TestRunner(self._log_message_event, dict())
-            await self.runner.run(self._project)
+            await self.runner.run(self._context)
 
         mock.side_effect = job_start
         mock_stdout.encoding = 'utf-8'

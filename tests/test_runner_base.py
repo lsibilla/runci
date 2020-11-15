@@ -17,7 +17,7 @@ class test_runner_base(unittest.TestCase):
             async def run_internal(self, project: Project):
                 raise Exception("Simulating failed runner")
 
-        project = Project([], [], [])
+        project = Project([], [])
         test_runner = TestRunner(lambda s, m: m, dict())
         asyncio.run(test_runner.run(project))
         self.assertFalse(test_runner.is_succeeded)
@@ -34,7 +34,7 @@ class test_runner_base(unittest.TestCase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [], [])
+        project = Project([], [])
         test_runner = TestRunner(_log_message, dict())
         asyncio.run(test_runner.run(project))
         self.assertFalse(test_runner.is_succeeded)
@@ -51,7 +51,7 @@ class test_runner_base(unittest.TestCase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [], [])
+        project = Project([], [])
         test_runner = TestRunner(_log_message, dict())
         asyncio.run(test_runner.run(project))
         self.maxDiff = None
@@ -70,7 +70,7 @@ class test_runner_base(unittest.TestCase):
             async def run_internal(self, project: Project):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [], [])
+        project = Project([], [])
         test_runner = TestRunner(_log_message, dict())
         asyncio.run(test_runner.run(project))
         self.maxDiff = None

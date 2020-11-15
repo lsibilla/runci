@@ -62,4 +62,4 @@ def load_project(parameters):
 
     targets = config.create_entities(__create_target, targets.items())
 
-    return config.Project(services, targets, parameters)
+    return config.Project(services, targets)

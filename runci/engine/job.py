@@ -5,7 +5,8 @@ from collections import namedtuple
 from datetime import datetime
 import sys
 
-from runci.entities import config
+from runci.entities.context import Context
+from runci.entities.config import Target
 from runci.engine import runner
 
 
@@ -108,13 +109,13 @@ class JobCanceledEvent(JobFailureEvent):
 class Job(object):
     """description of class"""
 
-    _project: config.Project
-    _target: config.Target
+    _context: Context
+    _target: Target
     _status: JobStatus
     _events: asyncio.Queue
 
-    def __init__(self, project: config.Project, target: config.Target):
-        self._project = project
+    def __init__(self, context: Context, target: Target):
+        self._context = context
         self._target = target
         self._status = JobStatus.CREATED
         self._events = None
@@ -143,7 +144,7 @@ class Job(object):
                 step_runner_cls = runner.selector.get(step.type, None)
                 if step_runner_cls is not None:
                     step_runner = step_runner_cls(self._log_message_event, step.spec)
-                    await step_runner.run(self._project)
+                    await step_runner.run(self._context)
                     if step_runner.is_succeeded:
                         self._log_event(JobStepSuccessEvent())
                     else:

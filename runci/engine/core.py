@@ -1,7 +1,8 @@
 import asyncio
 from collections import namedtuple
 
-from runci.entities import config
+from runci.entities.config import Target
+from runci.entities.context import Context
 from runci.engine.job import Job, JobStatus
 
 
@@ -54,9 +55,8 @@ class DependencyNode(namedtuple("dependency_node", "job dependencies")):
 
 
 class DependencyTree():
-    _project: config.Project
+    _context: Context
     _root_node: DependencyNode
-    _job_dict: dict
 
     @property
     def project(self):
@@ -66,27 +66,33 @@ class DependencyTree():
     def root_node(self):
         return self._root_node
 
-    def __init__(self, project: config.Project):
-        self._project = project
-        self._job_dict = dict()
+    def __init__(self):
+        self._context = None
+        pass
 
-        if len(project.parameters.targets) == 1:
-            self._root_node = self._get_dependency_subtree(project.parameters.targets[0])
+    def set_context(self, context):
+        if self._context is not None and self._context != context:
+            raise "DependencyTree context already set"
+
+        self._context = context
+
+        if len(self._context.parameters.targets) == 1:
+            self._root_node = self._get_dependency_subtree(self._context.parameters.targets[0])
         else:
             dependent_subtree = list([self._get_dependency_subtree(target)
-                                      for target in project.parameters.targets])
-            root_job = Job(project, config.Target("root", [], []))
+                                      for target in self._context.parameters.targets])
+            root_job = Job(self._context.project, Target("root", [], []))
             self._root_node = DependencyNode(root_job, dependent_subtree)
 
     def _get_dependency_subtree(self, target_name: str) -> DependencyNode:
-        target = self._get_target(self.project, target_name)
-        job = self._get_job(self.project, target)
+        target = self._get_target(target_name)
+        job = self._get_job(target)
         dependent_subtree = list([self._get_dependency_subtree(dependency)
                                   for dependency in target.dependencies])
         return DependencyNode(job, dependent_subtree)
 
-    def _get_target(self, project: config.Project, target_name: str) -> config.Target:
-        matching_targets = [t for t in self.project.targets if t.name == target_name]
+    def _get_target(self, target_name: str) -> Target:
+        matching_targets = [t for t in self._context.project.targets if t.name == target_name]
         if len(matching_targets) == 0:
             raise UnknownTargetException("Can't find target " + target_name)
         elif len(matching_targets) == 0:
@@ -94,11 +100,11 @@ class DependencyTree():
 
         return matching_targets[0]
 
-    def _get_job(self, project: config.Project, target: config.Target) -> Job:
-        job = self._job_dict.get(target.name, None)
+    def _get_job(self, target: Target) -> Job:
+        job = self._context.jobs.get(target.name, None)
         if job is None:
-            job = Job(project, target)
-            self._job_dict[target.name] = job
+            job = Job(self._context, target)
+            self._context.jobs[target.name] = job
 
         return job
 
@@ -120,3 +126,10 @@ class DependencyTree():
     @property
     def status(self):
         return self.root_node.status
+
+
+def create_context(project, parameters):
+    tree = DependencyTree()
+    context = Context(project, parameters, tree)
+    tree.set_context(context)
+    return context

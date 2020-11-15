@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 
-class Project(namedtuple('config', 'services targets parameters')):
+class Project(namedtuple('config', 'services targets')):
     """Represent the runci configuration entity."""
 
 
