@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from runci.entities.config import Project, Target, Step
 from runci.entities.parameters import Parameters
-from runci.engine.core import create_context
+from runci.engine.core import create_context, DependencyTree
 from runci.engine.runner.compose_run import ComposeRunRunner
 from unittest.mock import patch
 
@@ -21,7 +21,7 @@ class test_runner_compose_build(unittest.TestCase):
     @patch('runci.engine.runner.compose_run.ComposeRunRunner._run_process')
     def test_command_line_args(self, mock):
         async def run():
-            runner = ComposeRunRunner(lambda a, b: None, self.step.spec)
+            runner = ComposeRunRunner(lambda e: None, self.step.spec)
             context = create_context(self.project, self.parameters)
             await runner.run(context)
 
@@ -31,7 +31,7 @@ class test_runner_compose_build(unittest.TestCase):
     @patch('runci.engine.runner.compose_run.ComposeRunRunner.run')
     def test_integration(self, mock):
         context = create_context(self.project, self.parameters)
-        context.dependencyTree.run()
+        DependencyTree(context).run()
         mock.assert_called_once()
 
 

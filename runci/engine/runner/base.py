@@ -7,6 +7,7 @@ import traceback
 from typing import Callable
 
 from runci.entities.context import Context
+from runci.entities import event
 from . import RunnerStatus
 
 
@@ -17,24 +18,27 @@ if sys.platform == "win32":
 class RunnerBase():
     spec: dict
     _status: RunnerStatus
-    _message_logger: Callable
+    _event_logger: Callable
     _selector = None
 
-    def __init__(self, message_logger: Callable, spec: dict):
+    def __init__(self, event_logger: Callable, spec: dict):
         self.spec = spec
         self._status = RunnerStatus.CREATED
-        self._message_logger = message_logger
+        self._event_logger = event_logger
 
     @classmethod
     def get_selector(cls):
         return cls._selector
 
-    def _log_runner_message(self, output_stream, message):
-        self._log_message(output_stream, message + os.sep)
+    def _log_event(self, job_event):
+        self._event_logger(job_event)
 
     def _log_message(self, output_stream, message):
         if message != []:
-            self._message_logger(output_stream, message)
+            self._log_event(event.JobMessageEvent(output_stream, message))
+
+    def _log_runner_message(self, output_stream, message):
+        self._log_message(output_stream, message + os.linesep)
 
     async def _log_stream(self, output_stream, input_stream: asyncio.StreamReader):
         if output_stream not in [sys.stdout, sys.stderr]:

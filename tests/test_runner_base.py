@@ -2,7 +2,7 @@ import asyncio
 import sys
 import unittest
 
-from runci.entities.config import Project
+from runci.entities.context import Context
 from runci.engine.runner.base import RunnerBase
 
 
@@ -14,46 +14,36 @@ class test_runner_base(unittest.TestCase):
 
     def test_catch_exception(self):
         class TestRunner(RunnerBase):
-            async def run_internal(self, project: Project):
+            async def run_internal(self, context: Context):
                 raise Exception("Simulating failed runner")
 
-        project = Project([], [])
-        test_runner = TestRunner(lambda s, m: m, dict())
-        asyncio.run(test_runner.run(project))
+        context = Context(None, None, None, None, None)
+        test_runner = TestRunner(lambda e: None, dict())
+        asyncio.run(test_runner.run(context))
         self.assertFalse(test_runner.is_succeeded)
 
     def test_failed_process(self):
-        messages = list()
         command = "exit 1"
 
-        def _log_message(output_stream, message):
-            if message != []:
-                messages.append([output_stream, message])
-
         class TestRunner(RunnerBase):
-            async def run_internal(self, project: Project):
+            async def run_internal(self, context: Context):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [])
-        test_runner = TestRunner(_log_message, dict())
-        asyncio.run(test_runner.run(project))
+        context = Context(None, None, None, None, None)
+        test_runner = TestRunner(lambda e: None, dict())
+        asyncio.run(test_runner.run(context))
         self.assertFalse(test_runner.is_succeeded)
 
     def test_successful_process(self):
-        messages = list()
         command = "exit 0"
 
-        def _log_message(output_stream, message):
-            if message != []:
-                messages.append([output_stream, message])
-
         class TestRunner(RunnerBase):
-            async def run_internal(self, project: Project):
+            async def run_internal(self, context: Context):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [])
-        test_runner = TestRunner(_log_message, dict())
-        asyncio.run(test_runner.run(project))
+        context = Context(None, None, None, None, None)
+        test_runner = TestRunner(lambda e: None, dict())
+        asyncio.run(test_runner.run(context))
         self.maxDiff = None
         self.assertTrue(test_runner.is_succeeded)
 
@@ -67,12 +57,12 @@ class test_runner_base(unittest.TestCase):
                 messages.append([output_stream, message])
 
         class TestRunner(RunnerBase):
-            async def run_internal(self, project: Project):
+            async def run_internal(self, context: Context):
                 await self._run_process(["sh", "-c", command])
 
-        project = Project([], [])
+        context = Context(None, None, None, None, None, None)
         test_runner = TestRunner(_log_message, dict())
-        asyncio.run(test_runner.run(project))
+        asyncio.run(test_runner.run(context))
         self.maxDiff = None
         self.assertListEqual(messages,
                              [[sys.stdout, 'Starting TestRunner runner\n'],

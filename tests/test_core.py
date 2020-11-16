@@ -87,7 +87,7 @@ class test_target(unittest.TestCase):
     def test_inexistent(self, project, parameters):
         with self.assertRaises(UnknownTargetException):
             context = core.create_context(project, parameters)
-            context.dependencyTree.run()
+            core.DependencyTree(context).run()
 
 
 @patch("runci.engine.runner.base.RunnerBase.run")
@@ -95,7 +95,7 @@ class test_run(unittest.TestCase):
     @parameterized.expand(allparams)
     def test_runner_run(self, mock, project, parameters, calls):
         context = core.create_context(project, parameters)
-        context.dependencyTree.run()
+        core.DependencyTree(context).run()
         mock.assert_has_calls([call(context)])
 
 
@@ -104,7 +104,7 @@ class test_run_process(unittest.TestCase):
     @parameterized.expand(allparams_paralellization)
     def test_command_line_args(self, mock, project, parameters, calls, noparallel):
         context = core.create_context(project, parameters)
-        context.dependencyTree.run(noparallel)
+        core.DependencyTree(context).run(noparallel)
         mock.assert_has_calls(calls)
 
 
@@ -117,8 +117,9 @@ class test_build_result(unittest.TestCase):
         mock.side_effect = side_effect
 
         context = core.create_context(project, parameters)
-        context.dependencyTree.run(noparallel)
-        self.assertEqual(context.dependencyTree.status, job.JobStatus.SUCCEEDED)
+        tree = core.DependencyTree(context)
+        tree.run(noparallel)
+        self.assertEqual(tree.status, job.JobStatus.SUCCEEDED)
 
     @parameterized.expand(allparams_paralellization)
     def test_failing_build(self, mock, project, parameters, calls, noparallel):
@@ -127,8 +128,9 @@ class test_build_result(unittest.TestCase):
         mock.side_effect = side_effect
 
         context = core.create_context(project, parameters)
-        context.dependencyTree.run(noparallel)
-        self.assertEqual(context.dependencyTree.status, job.JobStatus.FAILED)
+        tree = core.DependencyTree(context)
+        tree.run(noparallel)
+        self.assertEqual(tree.status, job.JobStatus.FAILED)
 
 
 if __name__ == '__main__':

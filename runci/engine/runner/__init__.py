@@ -8,3 +8,4 @@ class RunnerStatus(enum.Enum):
     SUCCEEDED = 'succeeded'
     FAILED = 'failed'
     CANCELED = 'canceled'
+    PAUSED = 'paused'

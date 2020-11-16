@@ -32,9 +32,13 @@ def __create_step(item):
     if len(other_keys) != 1:
         raise Exception("Can't find key for step '%s'." % name)
     type = other_keys[0]
+
     spec = item[type]
     if spec is None:
         spec = dict()
+    elif isinstance(spec, str):
+        spec = {"_": spec}
+
     return config.Step(name, type, spec)
 
 

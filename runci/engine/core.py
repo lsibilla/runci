@@ -8,6 +8,7 @@ from runci.entities.config import Target
 from runci.entities.context import Context
 from runci.engine.job import Job, JobStatus
 from runci.engine.runner.base import RunnerBase
+from runci.engine.listener.base import ListenerBase
 
 
 class RunCIEngineException(Exception):
@@ -63,21 +64,14 @@ class DependencyTree():
     _root_node: DependencyNode
 
     @property
-    def project(self):
-        return self._project
+    def context(self):
+        return self._context
 
     @property
     def root_node(self):
         return self._root_node
 
-    def __init__(self):
-        self._context = None
-        pass
-
-    def set_context(self, context):
-        if self._context is not None and self._context != context:
-            raise "DependencyTree context already set"
-
+    def __init__(self, context):
         self._context = context
 
         if len(self._context.parameters.targets) == 1:
@@ -85,32 +79,15 @@ class DependencyTree():
         else:
             dependent_subtree = list([self._get_dependency_subtree(target)
                                       for target in self._context.parameters.targets])
-            root_job = Job(self._context.project, Target("root", [], []))
+            root_job = Job(self._context, Target("root", [], []))
             self._root_node = DependencyNode(root_job, dependent_subtree)
 
     def _get_dependency_subtree(self, target_name: str) -> DependencyNode:
-        target = self._get_target(target_name)
-        job = self._get_job(target)
+        target = get_target(self._context, target_name)
+        job = get_job(self._context, target)
         dependent_subtree = list([self._get_dependency_subtree(dependency)
                                   for dependency in target.dependencies])
         return DependencyNode(job, dependent_subtree)
-
-    def _get_target(self, target_name: str) -> Target:
-        matching_targets = [t for t in self._context.project.targets if t.name == target_name]
-        if len(matching_targets) == 0:
-            raise UnknownTargetException("Can't find target " + target_name)
-        elif len(matching_targets) == 0:
-            raise AmbiguousTargetException("Ambiguous target: " + target_name)
-
-        return matching_targets[0]
-
-    def _get_job(self, target: Target) -> Job:
-        job = self._context.jobs.get(target.name, None)
-        if job is None:
-            job = Job(self._context, target)
-            self._context.jobs[target.name] = job
-
-        return job
 
     def get_nodes(self, root=None):
         if root is None:
@@ -132,16 +109,55 @@ class DependencyTree():
         return self.root_node.status
 
 
-def create_context(project, parameters, modules=["compose_build", "compose_run", "docker_build"]):
+default_modules = [
+    "runci.engine.runner.compose_build",
+    "runci.engine.runner.compose_run",
+    "runci.engine.runner.docker_build",
+    "runci.engine.runner.target_run",
+    "runci.engine.listener.terminal",
+]
+
+
+def create_context(project, parameters, modules=default_modules):
     runners = {}
-    for module in modules:
-        module_fullname = "runci.engine.runner." + module
-        importlib.import_module(module_fullname)
-        for name, obj in inspect.getmembers(sys.modules[module_fullname], inspect.isclass):
+    listeners = {}
+    processors = {}
+
+    for module_name in modules:
+        importlib.import_module(module_name)
+        for name, obj in inspect.getmembers(sys.modules[module_name], inspect.isclass):
             if issubclass(obj, RunnerBase):
                 runners[obj.get_selector()] = obj
 
-    tree = DependencyTree()
-    context = Context(project, parameters, runners, tree)
-    tree.set_context(context)
+            if issubclass(obj, ListenerBase):
+                for event_type, listener in obj.event_listeners.items():
+                    listeners[event_type] = listeners.get(event_type, []) + [listener]
+
+                for event_type, processor in obj.event_processors.items():
+                    processors[event_type] = processors.get(event_type, []) + [processor]
+
+    context = Context(project, parameters, runners, listeners, processors)
     return context
+
+
+def get_target(context, target_name: str) -> Target:
+    matching_targets = [t for t in context.project.targets if t.name == target_name]
+    if len(matching_targets) == 0:
+        raise UnknownTargetException("Can't find target " + target_name)
+    elif len(matching_targets) == 0:
+        raise AmbiguousTargetException("Ambiguous target: " + target_name)
+
+    return matching_targets[0]
+
+
+def get_job(context, target: Target) -> Job:
+    job = context.jobs.get(target.name, None)
+    if job is None:
+        job = Job(context, target)
+        context.jobs[target.name] = job
+
+    return job
+
+
+def get_jobs(context: Context) -> list:
+    return list(context.jobs.values())
