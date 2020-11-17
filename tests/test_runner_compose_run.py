@@ -4,7 +4,7 @@ from runci.entities.config import Project, Target, Step
 from runci.entities.parameters import Parameters
 from runci.engine.core import create_context, DependencyTree
 from runci.engine.runner.compose_run import ComposeRunRunner
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 
 class test_runner_compose_build(unittest.TestCase):
@@ -26,7 +26,8 @@ class test_runner_compose_build(unittest.TestCase):
             await runner.run(context)
 
         asyncio.run(run())
-        mock.assert_called_once_with('docker-compose -f docker-compose.yml -f runci.yml run --rm app'.split(' '))
+        mock.assert_has_calls([call('docker-compose -f docker-compose.yml -f runci.yml run --rm app'.split(' ')),
+                               call('docker-compose -f docker-compose.yml -f runci.yml down'.split(' '))])
 
     @patch('runci.engine.runner.compose_run.ComposeRunRunner.run')
     def test_integration(self, mock):

@@ -72,10 +72,10 @@ class RunnerBase():
                                          self._log_stream(sys.stderr, process.stderr),
                                          process.wait()]])
 
-        if process.returncode == 0:
-            self._status = RunnerStatus.SUCCEEDED
-        else:
+        if process.returncode != 0:
             self._status = RunnerStatus.FAILED
+
+        return process.returncode
 
     @property
     def is_succeeded(self):

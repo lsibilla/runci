@@ -10,16 +10,22 @@ class ComposeRunRunner(RunnerBase):
         service_list = self.spec.get('services', None)
         project_name = self.spec.get('projectName', None)
 
-        args = ['docker-compose']
+        dc_args = ['docker-compose']
         for file in files:
-            args.extend(['-f', file])
+            dc_args.extend(['-f', file])
 
         if project_name is not None:
-            args.extend(['-p', project_name])
+            dc_args.extend(['-p', project_name])
 
-        args.extend(['run', '--rm'])
+        run_args = list(dc_args)
+        run_args.extend(['run', '--rm'])
 
         if service_list is not None:
-            args.extend(service_list.split(' '))
+            run_args.extend(service_list.split(' '))
 
-        await self._run_process(args)
+        await self._run_process(run_args)
+
+        down_args = list(dc_args)
+        down_args.extend(['down'])
+
+        await self._run_process(down_args)
