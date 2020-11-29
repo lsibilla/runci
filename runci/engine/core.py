@@ -113,6 +113,7 @@ default_modules = [
     "runci.engine.runner.compose_build",
     "runci.engine.runner.compose_run",
     "runci.engine.runner.docker_build",
+    "runci.engine.runner.docker_pull",
     "runci.engine.runner.target_run",
     "runci.engine.listener.terminal",
 ]
