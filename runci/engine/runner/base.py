@@ -1,7 +1,6 @@
 from abc import abstractmethod
 import asyncio
 import os
-import subprocess
 import sys
 import traceback
 from typing import Callable
@@ -13,6 +12,20 @@ from . import RunnerStatus
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+
+class RunnerSubprocessProtocol(asyncio.SubprocessProtocol):
+    _streams = [sys.stdout, sys.stderr]
+
+    def __init__(self, message_logger, exit_future):
+        self._message_logger = message_logger
+        self._exit_future = exit_future
+
+    def pipe_data_received(self, fd, data):
+        self._message_logger(self._streams[fd-1], data)
+
+    def process_exited(self):
+        self._exit_future.set_result(True)
 
 
 class RunnerBase():
@@ -44,7 +57,8 @@ class RunnerBase():
         if output_stream not in [sys.stdout, sys.stderr]:
             raise Exception("output_stream should be stdout or stderr")
         while not input_stream.at_eof():
-            self._log_message(output_stream, await input_stream.readline())
+            message = await input_stream.readline()
+            self._log_message(output_stream, message)
 
     @abstractmethod
     async def run_internal(self, context: Context):
@@ -65,17 +79,22 @@ class RunnerBase():
 
     async def _run_process(self, args):
         self._log_runner_message(sys.stdout, "Running command: %s" % str.join(" ", args))
-        process = await asyncio.create_subprocess_exec(args[0], *args[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        loop = asyncio.get_event_loop()
+        exit_future = asyncio.Future(loop=loop)
 
-        await asyncio.wait([asyncio.create_task(coro)
-                            for coro in [self._log_stream(sys.stdout, process.stdout),
-                                         self._log_stream(sys.stderr, process.stderr),
-                                         process.wait()]])
+        transport, protocol = await loop.subprocess_exec(
+            lambda: RunnerSubprocessProtocol(self._log_message, exit_future),
+            args[0], *args[1:],
+            stdin=None)
 
-        if process.returncode != 0:
+        await exit_future
+        return_code = transport.get_returncode()
+        transport.close()
+
+        if return_code != 0:
             self._status = RunnerStatus.FAILED
 
-        return process.returncode
+        return return_code
 
     @property
     def is_succeeded(self):

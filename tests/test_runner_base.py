@@ -4,6 +4,7 @@ import unittest
 
 from runci.entities.context import Context
 from runci.engine.runner.base import RunnerBase
+from runci.entities.event import JobMessageEvent
 
 
 class test_runner_base(unittest.TestCase):
@@ -47,21 +48,23 @@ class test_runner_base(unittest.TestCase):
         self.maxDiff = None
         self.assertTrue(test_runner.is_succeeded)
 
-    @unittest.skip("Not properly implemented")
+    @unittest.skip("Known issue. Intertwinned stdout and stderr output may be swapped.")
     def test_process_output(self):
         messages = list()
         command = self.test_command
 
-        def _log_message(output_stream, message):
-            if message != []:
-                messages.append([output_stream, message])
+        def _log_event(event):
+            self.assertIsInstance(event, JobMessageEvent)
+            job_message = event.message
+            if job_message.message != []:
+                messages.append([job_message.stream, job_message.message])
 
         class TestRunner(RunnerBase):
             async def run_internal(self, context: Context):
                 await self._run_process(["sh", "-c", command])
 
-        context = Context(None, None, None, None, None, None)
-        test_runner = TestRunner(_log_message, dict())
+        context = Context(None, None, None, None, None)
+        test_runner = TestRunner(_log_event, dict())
         asyncio.run(test_runner.run(context))
         self.maxDiff = None
         self.assertListEqual(messages,
