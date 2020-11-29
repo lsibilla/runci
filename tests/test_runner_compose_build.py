@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 
 class test_runner_compose_build(unittest.TestCase):
-    step = Step("test", "compose-build", dict())
+    step = Step("test", "compose-build", {})
     project = Project(
         services=[],
         targets=[Target(
@@ -16,7 +16,7 @@ class test_runner_compose_build(unittest.TestCase):
             dependencies=[],
             steps=[step]
         )])
-    parameters = Parameters(dataconnection="docker-compose.yml runci.yml", targets=["target"], verbosity=0)
+    parameters = Parameters(dataconnection="runci.yml", targets=["target"], verbosity=0)
 
     @patch('runci.engine.runner.compose_build.ComposeBuildRunner._run_process')
     def test_command_line_args(self, mock):
@@ -27,7 +27,7 @@ class test_runner_compose_build(unittest.TestCase):
             await runner.run(context)
 
         asyncio.run(run())
-        mock.assert_called_once_with('docker-compose -f docker-compose.yml -f runci.yml build'.split(' '))
+        mock.assert_called_once_with('docker-compose -f runci.yml build'.split(' '))
 
     @patch('runci.engine.runner.compose_build.ComposeBuildRunner.run')
     def test_integration(self, mock):

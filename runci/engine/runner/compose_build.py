@@ -8,10 +8,15 @@ class ComposeBuildRunner(RunnerBase):
     async def run_internal(self, context: Context):
         files = self.spec.get('file', context.parameters.dataconnection).split(' ')
         service_list = self.spec.get('services', None)
+        project_name = self.spec.get('projectName', None)
 
         args = ['docker-compose']
         for file in files:
             args.extend(['-f', file])
+
+        if project_name is not None:
+            args.extend(['-p', project_name])
+
         args.append('build')
 
         if service_list is not None:
