@@ -1,3 +1,7 @@
+import random
+import string
+import sys
+
 from .base import RunnerBase
 from runci.entities.context import Context
 
@@ -6,16 +10,28 @@ class ComposeRunRunner(RunnerBase):
     _selector = 'compose-run'
 
     async def run_internal(self, context: Context):
-        files = self.spec.get('file', context.parameters.dataconnection).split(' ')
+        files = self.spec.get('file', 'docker-compose.yml ' + context.parameters.dataconnection).split(' ')
         service_list = self.spec.get('services', None)
         project_name = self.spec.get('projectName', None)
+        build = self.spec.get('build', True)
+
+        if (project_name is None):
+            # Generate a random string
+            project_name = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
 
         dc_args = ['docker-compose']
         for file in files:
             dc_args.extend(['-f', file])
 
-        if project_name is not None:
-            dc_args.extend(['-p', project_name])
+        dc_args.extend(['-p', project_name])
+
+        if build:
+            self._log_runner_message(sys.stdout, "Ensuring images are built")
+
+            build_args = list(dc_args)
+            build_args.extend(['build', '-q'])
+
+            await self._run_process(build_args)
 
         run_args = list(dc_args)
         run_args.extend(['run', '--rm'])
