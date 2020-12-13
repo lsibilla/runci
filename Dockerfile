@@ -18,6 +18,7 @@ RUN coverage run --source ./runci --timid -m unittest && coverage report -m
 RUN pip install .
 
 COPY runci.spec /src/runci.spec
+COPY hook-*.py /src/
 RUN pyinstaller runci.spec
 
 

@@ -32,22 +32,22 @@ def main(targets, file):
     unknown_targets = [t for t in targets if t not in [t.name for t in project.targets]]
     if any(unknown_targets):
         print("Unkown targets: %s" % str.join(" ", unknown_targets), file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
     result = asyncio.run(run_project(context))
 
     if result == JobStatus.SUCCEEDED:
         print("Pipeline has run succesfully.")
-        exit(0)
+        sys.exit(0)
     elif result == JobStatus.FAILED:
         print("Pipeline has failed.", file=sys.stderr)
-        exit(1)
+        sys.exit(1)
     elif result == JobStatus.CANCELED:
         print("Pipeline has been canceled.", file=sys.stderr)
-        exit(2)
+        sys.exit(2)
     else:
         print("Pipeline has been run but outcome is undetermined. Please report this as a bug.", file=sys.stderr)
-        exit(3)
+        sys.exit(3)
 
 
 async def run_project(context):
