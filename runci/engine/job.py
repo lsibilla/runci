@@ -57,21 +57,21 @@ class Job(object):
     async def _start(self):
         if self._status == JobStatus.CREATED:
             self._status = JobStatus.STARTED
-            self._log_event(event.JobStartEvent())
+            self._log_event(event.JobStartEvent(self._target))
 
             for step in self._target.steps:
                 step_runner_cls = self._context.runners.get(step.type, None)
                 if step_runner_cls is not None:
-                    step_runner = step_runner_cls(self._log_event, step.spec)
+                    step_runner = step_runner_cls(self._target, self._log_event, step.spec)
                     await step_runner.run(self._context)
                     if step_runner.is_succeeded:
-                        self._log_event(event.JobStepSuccessEvent())
+                        self._log_event(event.JobStepSuccessEvent(self._target))
                     else:
-                        self._log_event(event.JobStepFailureEvent())
+                        self._log_event(event.JobStepFailureEvent(self._target))
                         self.fail()
                         break
                 else:
-                    self._log_event(event.JobStepUnknownTypeEvent())
+                    self._log_event(event.JobStepUnknownTypeEvent(self._target))
                     self.fail()
                     break
 
@@ -88,29 +88,29 @@ class Job(object):
     def pause(self, job_event=None):
         if self._status in [JobStatus.STARTED]:
             self._status = JobStatus.PAUSED
-            self._log_event(event.JobPauseEvent())
+            self._log_event(event.JobPauseEvent(self._target))
 
     def resume(self, job_event=None):
         if self._status in [JobStatus.PAUSED]:
             self._status = JobStatus.STARTED
-            self._log_event(event.JobResumeEvent())
+            self._log_event(event.JobResumeEvent(self._target))
 
     def success(self, job_event=None):
         if self._status in [JobStatus.CREATED, JobStatus.STARTED]:
             self._status = JobStatus.SUCCEEDED
-            self._log_event(event.JobSuccessEvent())
+            self._log_event(event.JobSuccessEvent(self._target))
 
     def fail(self, job_event=None):
-        self._log_event(event.JobFailureEvent())
+        self._log_event(event.JobFailureEvent(self._target))
         self._status = JobStatus.FAILED
 
     def cancel(self, job_event=None):
         if self._status == JobStatus.CREATED:
-            self._log_event(event.JobCanceledEvent())
+            self._log_event(event.JobCanceledEvent(self._target))
             self._status = JobStatus.CANCELED
         elif self._status == JobStatus.STARTED:
             self._task.cancel()
-            self._log_event(event.JobCanceledEvent())
+            self._log_event(event.JobCanceledEvent(self._target))
             self._status = JobStatus.CANCELED
 
     @property

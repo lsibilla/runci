@@ -2,24 +2,41 @@ from abc import ABC
 from collections import namedtuple
 from datetime import datetime
 
+from runci.entities.config import Target
+
 
 class JobEvent(ABC):
+    _timestamp: datetime
+    _target: Target
+
+    def __init__(self, target: Target):
+        self._timestamp = datetime.now()
+        self._target = target
+
+    @property
+    def timestamp(self):
+        return self._timestamp
+
+    @property
+    def target(self):
+        return self._target
+
     pass
 
 
-class JobMessage(namedtuple("JobMessage", "stream timestamp message")):
+class JobMessage(namedtuple("JobMessage", "stream message")):
     """Represent a RunCI runner output line to stdout or stderr"""
     def __new__(cls, stream, message):
-        timestamp = datetime.now()
-        return super(JobMessage, cls).__new__(cls, stream, timestamp, message)
+        return super(JobMessage, cls).__new__(cls, stream, message)
 
 
 class JobMessageEvent(JobEvent):
     """Represent a RunCI runner output line to stdout or stderr event"""
     _message: JobMessage
 
-    def __init__(self, stream, message):
+    def __init__(self, target: Target, stream, message):
         self._message = JobMessage(stream, message)
+        super().__init__(target)
 
     @property
     def message(self):

@@ -25,7 +25,7 @@ class test_runner_docker_build(unittest.TestCase):
     @patch('runci.engine.runner.docker_pull.DockerPullRunner._run_process')
     def test_command_line_args(self, mock):
         async def run():
-            runner = DockerPullRunner(lambda e: None, self.step.spec)
+            runner = DockerPullRunner(self.project.targets[0], lambda e: None, self.step.spec)
             context = create_context(self.project, self.parameters)
             await runner.run(context)
 

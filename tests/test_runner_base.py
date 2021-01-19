@@ -19,7 +19,7 @@ class test_runner_base(unittest.TestCase):
                 raise Exception("Simulating failed runner")
 
         context = Context(None, None, None, None, None)
-        test_runner = TestRunner(lambda e: None, dict())
+        test_runner = TestRunner(None, lambda e: None, dict())
         asyncio.run(test_runner.run(context))
         self.assertFalse(test_runner.is_succeeded)
 
@@ -31,7 +31,7 @@ class test_runner_base(unittest.TestCase):
                 await self._run_process(["sh", "-c", command])
 
         context = Context(None, None, None, None, None)
-        test_runner = TestRunner(lambda e: None, dict())
+        test_runner = TestRunner(None, lambda e: None, dict())
         asyncio.run(test_runner.run(context))
         self.assertFalse(test_runner.is_succeeded)
 
@@ -43,7 +43,7 @@ class test_runner_base(unittest.TestCase):
                 await self._run_process(["sh", "-c", command])
 
         context = Context(None, None, None, None, None)
-        test_runner = TestRunner(lambda e: None, dict())
+        test_runner = TestRunner(None, lambda e: None, dict())
         asyncio.run(test_runner.run(context))
         self.maxDiff = None
         self.assertTrue(test_runner.is_succeeded)
@@ -64,7 +64,7 @@ class test_runner_base(unittest.TestCase):
                 await self._run_process(["sh", "-c", command])
 
         context = Context(None, None, None, None, None)
-        test_runner = TestRunner(_log_event, dict())
+        test_runner = TestRunner(None, _log_event, dict())
         asyncio.run(test_runner.run(context))
         self.maxDiff = None
         self.assertListEqual(messages,

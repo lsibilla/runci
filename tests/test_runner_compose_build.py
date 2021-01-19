@@ -22,7 +22,7 @@ class test_runner_compose_build(unittest.TestCase):
     def test_command_line_args(self, mock):
 
         async def run():
-            runner = ComposeBuildRunner(lambda e: None, self.step.spec)
+            runner = ComposeBuildRunner(None, lambda e: None, self.step.spec)
             context = create_context(self.project, self.parameters)
             await runner.run(context)
 

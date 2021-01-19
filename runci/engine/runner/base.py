@@ -5,8 +5,9 @@ import sys
 import traceback
 from typing import Callable
 
-from runci.entities.context import Context
 from runci.entities import event
+from runci.entities.config import Target
+from runci.entities.context import Context
 from . import RunnerStatus
 
 
@@ -31,10 +32,12 @@ class RunnerSubprocessProtocol(asyncio.SubprocessProtocol):
 class RunnerBase():
     spec: dict
     _status: RunnerStatus
+    _target: Target
     _event_logger: Callable
     _selector = None
 
-    def __init__(self, event_logger: Callable, spec: dict):
+    def __init__(self, target: Target, event_logger: Callable, spec: dict):
+        self._target = target
         self.spec = spec
         self._status = RunnerStatus.CREATED
         self._event_logger = event_logger
@@ -48,7 +51,7 @@ class RunnerBase():
 
     def _log_message(self, output_stream, message):
         if message != []:
-            self._log_event(event.JobMessageEvent(output_stream, message))
+            self._log_event(event.JobMessageEvent(self._target, output_stream, message))
 
     def _log_runner_message(self, output_stream, message):
         self._log_message(output_stream, message + os.linesep)

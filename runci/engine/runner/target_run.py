@@ -24,10 +24,10 @@ class TargetRunRunner(RunnerBase):
         jobs = [core.get_job(context, target) for target in targets]
 
         self._status = RunnerStatus.PAUSED
-        self._log_event(event.JobStepPauseEvent())
+        self._log_event(event.JobStepPauseEvent(self._target))
         await asyncio.gather(*[job.start() for job in jobs])
         self._status = RunnerStatus.STARTED
-        self._log_event(event.JobStepResumeEvent())
+        self._log_event(event.JobStepResumeEvent(self._target))
 
         if any([job.status == JobStatus.FAILED for job in jobs]):
             self._status = RunnerStatus.FAILED
