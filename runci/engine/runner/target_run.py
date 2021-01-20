@@ -13,8 +13,8 @@ class TargetRunRunner(RunnerBase):
     _selector = 'target-run'
 
     async def run_internal(self, context: Context):
-        target_names = self.spec.get("target",
-                                     self.spec.get("_", None))
+        target_names = self._step.spec.get("target",
+                                           self._step.spec.get("_", None))
         if target_names is None:
             raise Exception("Target should be specified for target-run step")
 
@@ -24,10 +24,10 @@ class TargetRunRunner(RunnerBase):
         jobs = [core.get_job(context, target) for target in targets]
 
         self._status = RunnerStatus.PAUSED
-        self._log_event(event.JobStepPauseEvent(self._target))
+        self._log_event(event.JobStepPauseEvent(self._target, self._step))
         await asyncio.gather(*[job.start() for job in jobs])
         self._status = RunnerStatus.STARTED
-        self._log_event(event.JobStepResumeEvent(self._target))
+        self._log_event(event.JobStepResumeEvent(self._target, self._step))
 
         if any([job.status == JobStatus.FAILED for job in jobs]):
             self._status = RunnerStatus.FAILED

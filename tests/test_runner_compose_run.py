@@ -21,7 +21,7 @@ class test_runner_compose_build(unittest.TestCase):
     @patch('runci.engine.runner.compose_run.ComposeRunRunner._run_process')
     def test_command_line_args(self, mock):
         async def run():
-            runner = ComposeRunRunner(self.project.targets[0], lambda e: None, self.step.spec)
+            runner = ComposeRunRunner(self.project.targets[0], self.step, lambda e: None)
             context = create_context(self.project, self.parameters)
             await runner.run(context)
 

@@ -10,10 +10,10 @@ class ComposeRunRunner(RunnerBase):
     _selector = 'compose-run'
 
     async def run_internal(self, context: Context):
-        files = self.spec.get('file', 'docker-compose.yml ' + context.parameters.dataconnection).split(' ')
-        service_list = self.spec.get('services', None)
-        project_name = self.spec.get('projectName', None)
-        build = self.spec.get('build', True)
+        files = self._step.spec.get('file', 'docker-compose.yml ' + context.parameters.dataconnection).split(' ')
+        service_list = self._step.spec.get('services', None)
+        project_name = self._step.spec.get('projectName', None)
+        build = self._step.spec.get('build', True)
 
         if (project_name is None):
             # Generate a random string

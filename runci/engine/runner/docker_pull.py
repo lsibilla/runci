@@ -8,8 +8,8 @@ class DockerPullRunner(RunnerBase):
     _selector = 'docker-pull'
 
     async def run_internal(self, context: Context):
-        images = self.spec.get("image",
-                               self.spec.get("_", None))
+        images = self._step.spec.get("image",
+                                     self._step.spec.get("_", None))
 
         if images is None:
             raise Exception("Image name should be specified for docker-pull step")

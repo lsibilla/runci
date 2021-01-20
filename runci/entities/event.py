@@ -2,7 +2,7 @@ from abc import ABC
 from collections import namedtuple
 from datetime import datetime
 
-from runci.entities.config import Target
+from runci.entities.config import Target, Step
 
 
 class JobEvent(ABC):
@@ -22,6 +22,14 @@ class JobEvent(ABC):
         return self._target
 
     pass
+
+
+class JobStepEvent(JobEvent):
+    _step: Step
+
+    def __init__(self, target: Target, step: Step):
+        self._step = step
+        super().__init__(target)
 
 
 class JobMessage(namedtuple("JobMessage", "stream message")):
@@ -47,19 +55,19 @@ class JobStartEvent(JobEvent):
     pass
 
 
-class JobStepStartEvent(JobEvent):
+class JobStepStartEvent(JobStepEvent):
     pass
 
 
-class JobStepPauseEvent(JobEvent):
+class JobStepPauseEvent(JobStepEvent):
     pass
 
 
-class JobStepResumeEvent(JobEvent):
+class JobStepResumeEvent(JobStepEvent):
     pass
 
 
-class JobStepEndEvent(JobEvent):
+class JobStepEndEvent(JobStepEvent):
     pass
 
 

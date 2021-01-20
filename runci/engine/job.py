@@ -62,16 +62,16 @@ class Job(object):
             for step in self._target.steps:
                 step_runner_cls = self._context.runners.get(step.type, None)
                 if step_runner_cls is not None:
-                    step_runner = step_runner_cls(self._target, self._log_event, step.spec)
+                    step_runner = step_runner_cls(self._target, step, self._log_event)
                     await step_runner.run(self._context)
                     if step_runner.is_succeeded:
-                        self._log_event(event.JobStepSuccessEvent(self._target))
+                        self._log_event(event.JobStepSuccessEvent(self._target, step))
                     else:
-                        self._log_event(event.JobStepFailureEvent(self._target))
+                        self._log_event(event.JobStepFailureEvent(self._target, step))
                         self.fail()
                         break
                 else:
-                    self._log_event(event.JobStepUnknownTypeEvent(self._target))
+                    self._log_event(event.JobStepUnknownTypeEvent(self._target, step))
                     self.fail()
                     break
 

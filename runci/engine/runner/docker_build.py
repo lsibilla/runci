@@ -6,9 +6,9 @@ class DockerBuildRunner(RunnerBase):
     _selector = 'docker-build'
 
     async def run_internal(self, context: Context):
-        dockerfile = self.spec.get('dockerfile', None)
-        context = self.spec.get('context', '.')
-        tags = self.spec.get('tags', None)
+        dockerfile = self._step.spec.get('dockerfile', None)
+        context = self._step.spec.get('context', '.')
+        tags = self._step.spec.get('tags', None)
 
         args = ['docker', 'build']
         if dockerfile is not None:

@@ -6,7 +6,7 @@ import traceback
 from typing import Callable
 
 from runci.entities import event
-from runci.entities.config import Target
+from runci.entities.config import Target, Step
 from runci.entities.context import Context
 from . import RunnerStatus
 
@@ -30,15 +30,15 @@ class RunnerSubprocessProtocol(asyncio.SubprocessProtocol):
 
 
 class RunnerBase():
-    spec: dict
-    _status: RunnerStatus
     _target: Target
+    _step: Step
+    _status: RunnerStatus
     _event_logger: Callable
     _selector = None
 
-    def __init__(self, target: Target, event_logger: Callable, spec: dict):
+    def __init__(self, target: Target, step: Step, event_logger: Callable):
         self._target = target
-        self.spec = spec
+        self._step = step
         self._status = RunnerStatus.CREATED
         self._event_logger = event_logger
 

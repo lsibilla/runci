@@ -6,9 +6,9 @@ class ComposeBuildRunner(RunnerBase):
     _selector = 'compose-build'
 
     async def run_internal(self, context: Context):
-        files = self.spec.get('file', context.parameters.dataconnection).split(' ')
-        service_list = self.spec.get('services', None)
-        project_name = self.spec.get('projectName', None)
+        files = self._step.spec.get('file', context.parameters.dataconnection).split(' ')
+        service_list = self._step.spec.get('services', None)
+        project_name = self._step.spec.get('projectName', None)
 
         args = ['docker-compose']
         for file in files:
