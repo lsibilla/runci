@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,17 +28,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.build.txt
+        pip install --user -r requirements.build.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --max-complexity=10 --max-line-length=127 --show-source --statistics
+        python -m flake8 . --count --max-complexity=10 --max-line-length=127 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         # flake8 . --count --max-complexity=10 --max-line-length=127 --exit-zero --statistics
     - name: Test with coverage
       run: |
-        coverage run --source runci -m unittest
-        coverage report -m
+        python -m coverage run --source runci -m unittest
+        python -m coverage report -m
     - name: Produce artifacts
       run: |
         pip install .
